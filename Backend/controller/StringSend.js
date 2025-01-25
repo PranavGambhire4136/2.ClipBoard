@@ -4,13 +4,16 @@ const { generateOTP } = require("./utility/generateOTP");
 exports.sendString = async (req, res) => {
     try {
         const { string } = req.body;
+        let { recoveryString } = req.body;
         if (!string) {
             return res.status(400).json({ success: false, message: "Please provide string to send" });
         }
 
         console.log("from string.js: ",string);
 
-        const recoveryString = generateOTP();
+        if (!recoveryString) {
+            recoveryString = generateOTP();
+        }
         
         console.log("from string.js: ",recoveryString);
 

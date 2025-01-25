@@ -2,7 +2,8 @@ const String = require("../Model/Strings");
 
 exports.receiveString = async (req, res) => {
     try {
-        const {RecoveryString} = req.body;
+        console.log("from receiveString.js", req.query);
+        const {RecoveryString} = req.query;
         console.log(RecoveryString);
         if (!RecoveryString) {
             return res.status(400).json({ 

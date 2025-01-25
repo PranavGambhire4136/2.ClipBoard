@@ -5,9 +5,12 @@ const blog = require("./Routes/Blog");
 const Cloudinary = require("./Config/Cloudinary");
 const DBConnect = require("./Config/DBConnect");
 const fileUpload = require("express-fileupload");
+const cors = require("cors");
 
 Cloudinary.cloudinaryConnect();
 DBConnect.connectDB();
+
+app.use(cors('http://localhost:5173'));
 
 app.use(express.json());
 app.use(fileUpload({
