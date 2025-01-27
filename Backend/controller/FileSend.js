@@ -6,8 +6,8 @@ const mime = require("mime-types");
 exports.sendFile = async (req, res) => {
     try {
         console.log("req.files: ",req.files);
-        const filename = req.files?.filename;
-
+        const filename = req.files?.file;
+        let {recoveryString} = req.body;
         if (!filename ) {
             return res.status(400).json({
                 success: false,
@@ -15,9 +15,17 @@ exports.sendFile = async (req, res) => {
             })
         }
 
+        const string = await File.findOne({recoveryString: recoveryString});
+        if (string) {
+            return res.status(400).json({
+                success: false,
+                message: "Recovery string already exists",
+            })
+        }
+
 
         const fileLink = await uploadFile(filename, "ClipBoard");
-        const recoveryString = generateOTP();
+        if (!recoveryString) recoveryString = generateOTP();
 
         if (!fileLink || !recoveryString) {
             return res.status(400).json({

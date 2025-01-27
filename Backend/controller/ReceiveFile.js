@@ -2,7 +2,8 @@ const File = require("../Model/File");
 
 exports.fileRecieve = async (req, res) => {
     try {
-        const {RecoveryString} = req.body;
+        console.log("from receiveFile.js", req.query);
+        const {RecoveryString} = req.query;
         if (!RecoveryString) {
             return res.status(400).json({ 
                 success: false,
@@ -18,7 +19,6 @@ exports.fileRecieve = async (req, res) => {
                 message: "Invalid recovery string or File not found ",
             });
         }
-        const FileType = file.Type;
         file.RecoveryString = null;
         file.expiryAt = null;
         file._id = null;

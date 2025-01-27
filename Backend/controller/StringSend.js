@@ -17,6 +17,11 @@ exports.sendString = async (req, res) => {
         
         console.log("from string.js: ",recoveryString);
 
+        const stringdata = await String.findOne({recoveryString: recoveryString});
+        if (stringdata) {
+            return res.status(400).json({ success: false, message: "Recovery string already exists" });
+        }
+
         const stringData = await String.create({
             string: string,
             recoveryString: recoveryString,
