@@ -15,6 +15,10 @@ exports.sendFile = async (req, res) => {
             })
         }
 
+
+        const fileLink = await uploadFile(filename, "ClipBoard");
+        if (!recoveryString) recoveryString = generateOTP();
+
         const string = await File.findOne({recoveryString: recoveryString});
         if (string) {
             return res.status(400).json({
@@ -22,10 +26,6 @@ exports.sendFile = async (req, res) => {
                 message: "Recovery string already exists",
             })
         }
-
-
-        const fileLink = await uploadFile(filename, "ClipBoard");
-        if (!recoveryString) recoveryString = generateOTP();
 
         if (!fileLink || !recoveryString) {
             return res.status(400).json({

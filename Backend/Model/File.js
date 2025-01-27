@@ -15,7 +15,7 @@ const fileSchema = new mongoose.Schema({
     },
     expiryAt: {
         type: Date,
-        default: Date.now() + 2 * 24 * 60 * 60 * 1000, //two days
+        default: () => Date.now() + 2 * 24 * 60 * 60 * 1000,
         index: { expireAfterSeconds: 0 }
     },
     location: {

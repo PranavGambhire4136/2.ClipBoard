@@ -1,41 +1,47 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 function AddString() {
   const [string, setString] = useState("");
-  const [customRecoveryString, setCustomRecoveryString] = useState(""); // New state for custom recovery string
+  const [customRecoveryString, setCustomRecoveryString] = useState("");
   const [recoveryString, setRecoveryString] = useState("");
   const [receivedString, setReceivedString] = useState(false);
   const [retrievedString, setRetrievedString] = useState("");
+  const [fileUploaded, setFileUploaded] = useState(false);
 
   const navigate = useNavigate();
 
   const submitHandler = (e) => {
     e.preventDefault();
-    console.log("String to upload:", string);
-
+    const toastId = toast.loading("Uploading string...");
     axios
       .post("http://localhost:5000/api/v1/uploadString", {
         string,
-        recoveryString: customRecoveryString || undefined, // Pass custom recovery string if provided
+        recoveryString: customRecoveryString || undefined, 
       })
       .then((response) => {
         setRecoveryString(response.data.recoveryString);
-        alert(
+        toast.success(
           `String uploaded successfully! Recovery String: ${
             customRecoveryString || response.data.recoveryString
           }`
         );
+        setFileUploaded(true);
+        toast.dismiss(toastId);
       })
       .catch((error) => {
-        console.error("Error uploading string:", error);
+        toast.error(error.response.data.message);
+        toast.dismiss(toastId);
       });
+
   };
 
   const submitRecovery = (e) => {
     e.preventDefault();
-    console.log("Recovery String:", recoveryString);
+
+    const toastId = toast.loading("Retrieving string...");
 
     axios
       .get("http://localhost:5000/api/v1/receiveString", {
@@ -44,20 +50,22 @@ function AddString() {
         },
       })
       .then((response) => {
-        console.log(response.data);
         setRetrievedString(response.data.string || "String not found!");
         setReceivedString(true);
+        toast.dismiss(toastId);
       })
       .catch((error) => {
-        console.error("Error retrieving string:", error);
+        toast.error(error.response.data.message);
+        toast.dismiss(toastId);
       });
+
   };
 
   const handleCopy = () => {
     navigator.clipboard
       .writeText(retrievedString)
-      .then(() => alert("Copied to clipboard!"))
-      .catch(() => alert("Failed to copy!"));
+      .then(() => toast.success("Copied to clipboard!"))
+      .catch(() => toast.error("Failed to copy!"));
   };
 
   return (
@@ -86,6 +94,10 @@ function AddString() {
               onChange={(e) => setCustomRecoveryString(e.target.value)}
               className="w-full border border-gray-300 rounded-lg p-2 focus:ring focus:ring-amber-300 focus:outline-none"
             />
+            {fileUploaded && (
+              <div className="text-gray-700 text-lg font-semibold">
+                Recovery String: <span className="text-orange-500">{recoveryString}</span> 
+              </div>)}
             <button
               type="submit"
               className="bg-amber-500 text-white py-2 rounded-lg hover:bg-amber-600 transition"

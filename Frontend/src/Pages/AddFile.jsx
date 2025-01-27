@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import toast from "react-hot-toast";
 
 function AddFile() {
   const [sendFile, setSendFile] = useState({});
@@ -10,6 +11,7 @@ function AddFile() {
     location: "",
     Type: "",
   });
+  const [fileUploaded, setFileUploaded] = useState(false);
   const navigate = useNavigate();
 
   const changeHandler = (e) => {
@@ -23,7 +25,7 @@ function AddFile() {
 
   const submitHandler = (e) => {
     e.preventDefault();
-    console.log("File to upload:", sendFile);
+    const toastId = toast.loading("Uploading file...");
     axios
       .post("http://localhost:5000/api/v1/uploadFile", sendFile,
         {
@@ -32,70 +34,89 @@ function AddFile() {
           },
         },
       )
-      .then((response) => { 
+      .then((response) => {
         setRecoveryString(response.data.data.recoveryString);
-        alert(`File uploaded successfully! Recovery String: ${response.data.data.recoveryString}`);
+        setFileUploaded(true);
+        toast.success(`File uploaded successfully! Recovery String: ${response.data.data.recoveryString}`);
+        toast.dismiss(toastId);
       })
       .catch((error) => {
-        console.error("Error uploading file:", error);
+        console.log(error);
+        toast.fail(error.response.data.message);
+        toast.dismiss(toastId);
       });
+
   };
 
   const submitRecovery = (e) => {
     e.preventDefault();
-    console.log("Recovery String:", recoveryString);
-    // setRetrievedFileData("Mock file content based on recovery string");
-    // setReceivedFile(true);
+
+    const toastId = toast.loading("Retrieving file...");
 
     axios
-  .get("http://localhost:5000/api/v1/receiveFile", {
-    params: {
-      RecoveryString: recoveryString,
-    },
-  })
-  .then((response) => {
-    console.log("received file: ",response.data.file);
-    setRetrievedFileData(response.data.file);
-    console.log("Hello");
-    setReceivedFile(true);
-  })
-  .catch((error) => {
-    console.error("Error retrieving file:", error);
-  });
+      .get("http://localhost:5000/api/v1/receiveFile", {
+        params: {
+          RecoveryString: recoveryString,
+        },
+      })
+      .then((response) => {
+        setRetrievedFileData(response.data.file);
+        setReceivedFile(true);
+        toast.dismiss(toastId);
+      })
+      .catch((error) => {
+        toast.error(error.response.data.message);
+        toast.dismiss(toastId);
+      });
+
 
   };
 
-  const handleDownload = () => {
-    console.log("retrievedFileData:", retrievedFileData);
+  const handleDownload = async () => {
+
     if (retrievedFileData && retrievedFileData.location && retrievedFileData.filename) {
-      // Debug logging to check the file type
-      console.log("File type:", retrievedFileData.Type);
-      
-      // Validate that we have a file type
+
       if (!retrievedFileData.Type) {
-        alert("Error: File type is missing");
+        toast.error("Error: File type is missing");
         return;
       }
 
-      const link = document.createElement("a");
-      link.href = retrievedFileData.location; // File URL
-  
-      // Make sure to trim any extra spaces and convert to lowercase for consistency
-      const fileType = retrievedFileData.Type.trim().toLowerCase();
-      link.download = `${retrievedFileData.filename}.${fileType}`;
-  
-      link.target = "_blank";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      console.log(`Downloaded file: ${link.download}`); // Log the final filename
-      alert("File downloaded successfully!");
+      try {
+        const response = await fetch(retrievedFileData.location);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch the file");
+        }
+
+        const fileData = await response.blob();
+        const fileType = retrievedFileData.Type.trim().toLowerCase();
+
+        let newFileName = retrievedFileData.filename;
+        if (!newFileName.toLowerCase().endsWith(`.${fileType}`)) {
+          newFileName = `${newFileName}.${fileType}`;
+        }
+
+        const fileUrl = URL.createObjectURL(new Blob([fileData], { type: fileData.type }));
+
+        const link = document.createElement("a");
+        link.href = fileUrl;
+        link.download = newFileName;
+        link.target = "_blank";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(fileUrl);
+
+        toast.success("File downloaded successfully!");
+      } catch (error) {
+        toast.error("Error: Unable to download the file.");
+      }
     } else {
-      alert("Error: File data is incomplete or missing.");
+      toast.error("Error: File data is incomplete or missing.");
     }
   };
-  
-  
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 flex-col">
       {!receivedFile && (
@@ -123,6 +144,10 @@ function AddFile() {
               onChange={changeHandler}
               className="w-full border border-gray-300 rounded-lg p-2 focus:ring focus:ring-amber-300 focus:outline-none"
             />
+            {fileUploaded && (
+              <div className="text-gray-700 text-lg font-semibold">
+                Recovery String: <span className="text-orange-500">{recoveryString}</span>
+              </div>)}
             <button
               type="submit"
               className="bg-amber-500 text-white py-2 rounded-lg hover:bg-amber-600 transition"
@@ -151,8 +176,7 @@ function AddFile() {
             />
             <button
               type="submit"
-              className="bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-900 transition"
-            >
+              className="bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-900 transition">
               Retrieve File from Online Clipboard
             </button>
           </form>
@@ -174,6 +198,7 @@ function AddFile() {
             className="border border-gray-300 rounded-lg p-4 text-gray-800 text-base font-medium bg-amber-100"
             style={{ whiteSpace: "pre-wrap" }}
           >
+            Please Download Your File
           </div>
         </div>
       )}
