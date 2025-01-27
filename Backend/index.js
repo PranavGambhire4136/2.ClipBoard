@@ -10,7 +10,7 @@ const cors = require("cors");
 Cloudinary.cloudinaryConnect();
 DBConnect.connectDB();
 
-app.use(cors('http://localhost:5173'));
+app.use(cors('https://onlineclipboardpranav.vercel.app'));
 
 app.use(express.json());
 app.use(fileUpload({
