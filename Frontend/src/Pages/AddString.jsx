@@ -17,7 +17,7 @@ function AddString() {
     e.preventDefault();
     const toastId = toast.loading("Uploading string...");
     axios
-      .post("http://localhost:5000/api/v1/uploadString", {
+      .post("https://2-clip-board.vercel.app/api/v1/uploadString", {
         string,
         recoveryString: customRecoveryString || undefined, 
       })
@@ -44,7 +44,7 @@ function AddString() {
     const toastId = toast.loading("Retrieving string...");
 
     axios
-      .get("http://localhost:5000/api/v1/receiveString", {
+      .get("https://2-clip-board.vercel.app/api/v1/receiveString", {
         params: {
             RecoveryString: recoveryString,
         },
