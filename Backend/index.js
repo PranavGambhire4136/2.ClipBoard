@@ -12,8 +12,8 @@ DBConnect.connectDB();
 
 app.use(cors({
     origin: 'https://onlineclipboardpranav.vercel.app',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Adjust based on the HTTP methods your API supports
-    credentials: true // Include credentials if necessary (e.g., for cookies or authorization headers)
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
 }));
 
 

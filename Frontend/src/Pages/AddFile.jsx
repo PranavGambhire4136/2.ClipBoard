@@ -27,7 +27,7 @@ function AddFile() {
     e.preventDefault();
     const toastId = toast.loading("Uploading file...");
     axios
-      .post("https://2-clip-board.vercel.app/api/v1/uploadFile", sendFile,
+      .post("https://two-clipboard.onrender.com/api/v1/uploadFile", sendFile,
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -54,7 +54,7 @@ function AddFile() {
     const toastId = toast.loading("Retrieving file...");
 
     axios
-      .get("https://2-clip-board.vercel.app/api/v1/receiveFile", {
+      .get("https://two-clipboard.onrender.com/api/v1/receiveFile", {
         params: {
           RecoveryString: recoveryString,
         },
