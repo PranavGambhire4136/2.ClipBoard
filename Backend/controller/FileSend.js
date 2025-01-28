@@ -5,7 +5,7 @@ const mime = require("mime-types");
 
 exports.sendFile = async (req, res) => {
     try {
-        console.log("req.files: ",req.files);
+        // console.log("req.files: ",req.files);
         const filename = req.files?.file;
         let {recoveryString} = req.body;
         if (!filename ) {
@@ -34,9 +34,9 @@ exports.sendFile = async (req, res) => {
             })
         }
 
-        console.log(fileLink);
+        // console.log(fileLink);
         const FileExtension = mime.extension(filename.mimetype);
-        console.log("FileExtension: ", FileExtension);
+        // console.log("FileExtension: ", FileExtension);
         
         const file = await File.create({
             filename: filename.name,

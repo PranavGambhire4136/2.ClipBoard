@@ -41,7 +41,7 @@ function AddFile() {
         toast.dismiss(toastId);
       })
       .catch((error) => {
-        console.log(error);
+        // console.log(error);
         toast.fail(error.response.data.message);
         toast.dismiss(toastId);
       });

@@ -2,7 +2,7 @@ const File = require("../Model/File");
 
 exports.fileRecieve = async (req, res) => {
     try {
-        console.log("from receiveFile.js", req.query);
+        // console.log("from receiveFile.js", req.query);
         const {RecoveryString} = req.query;
         if (!RecoveryString) {
             return res.status(400).json({ 

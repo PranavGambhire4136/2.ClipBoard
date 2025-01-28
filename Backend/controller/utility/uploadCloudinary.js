@@ -18,7 +18,7 @@ async function uploadToCloud(file, folders) {
         invalidate: true,
     };
 
-    console.log(`Uploading file: ${file.tempFilePath} as ${resourceType}`);
+    // console.log(`Uploading file: ${file.tempFilePath} as ${resourceType}`);
 
     try {
         return await cloudinary.uploader.upload(file.tempFilePath, options);
@@ -32,13 +32,13 @@ exports.uploadFile = async (file, folders) => {
         const result = await uploadToCloud(file, folders);
 
         if (file.tempFilePath) {
-            console.log("Deleting temporary file:", file.tempFilePath);
+            // console.log("Deleting temporary file:", file.tempFilePath);
             await fs.rm(file.tempFilePath);
         }
 
         return result.secure_url;
     } catch (err) {
-        console.error(`File upload failed: ${err.message}`);
+        // console.error(`File upload failed: ${err.message}`);
         throw err;
     }
 };

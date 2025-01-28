@@ -35,5 +35,5 @@ app.get("/", (req, res) => {
 app.use("/api/v1", blog);
 
 app.listen(process.env.PORT, () => {
-    console.log("shree Ganeshaya namah");
+    // console.log("shree Ganeshaya namah");
 });

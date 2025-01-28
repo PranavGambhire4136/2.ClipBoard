@@ -9,13 +9,13 @@ exports.sendString = async (req, res) => {
             return res.status(400).json({ success: false, message: "Please provide string to send" });
         }
 
-        console.log("from string.js: ",string);
+        // console.log("from string.js: ",string);
 
         if (!recoveryString) {
             recoveryString = generateOTP();
         }
         
-        console.log("from string.js: ",recoveryString);
+        // console.log("from string.js: ",recoveryString);
 
         const stringdata = await String.findOne({recoveryString: recoveryString});
         if (stringdata) {

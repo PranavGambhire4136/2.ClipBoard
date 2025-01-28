@@ -2,9 +2,9 @@ const String = require("../Model/Strings");
 
 exports.receiveString = async (req, res) => {
     try {
-        console.log("from receiveString.js", req.query);
+        // console.log("from receiveString.js", req.query);
         const {RecoveryString} = req.query;
-        console.log(RecoveryString);
+        // console.log(RecoveryString);
         if (!RecoveryString) {
             return res.status(400).json({ 
                 success: false,
@@ -13,7 +13,7 @@ exports.receiveString = async (req, res) => {
         }
 
         const string = await String.findOne({recoveryString: RecoveryString});
-        console.log(string);
+        // console.log(string);
         
         if (!string) {
             return res.status(400).json({ 
