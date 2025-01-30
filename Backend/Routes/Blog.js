@@ -11,4 +11,11 @@ router.get("/receiveFile", fileRecieve);
 router.post("/uploadString", sendString);
 router.get("/receiveString", receiveString);
 
+router.get("/dummy", (req, res) => {
+    return res.status(200).json({
+        success: true,
+        message: "Working",
+    });
+});
+
 module.exports = router;
