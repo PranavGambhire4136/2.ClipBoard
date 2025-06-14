@@ -10,6 +10,7 @@ function AddFile() {
     const [generatedCode, setGeneratedCode] = useState("");
     const [retrievedFileData, setRetrievedFileData] = useState(null);
     const fileInputRef = useRef(null);
+    const [dragOver, setDragOver] = useState(false);
 
 
     const handleFileSelect = (selectedFile) => {
@@ -20,7 +21,7 @@ function AddFile() {
 
     const handleDragDrop = (e) => {
         e.preventDefault();
-        e.currentTarget.classList.remove(styles.dragover);
+        setDragOver(false);
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             handleFileSelect(e.dataTransfer.files[0]);
         }
@@ -115,10 +116,10 @@ function AddFile() {
                 <h2><UploadCloud size={24} /> Upload File</h2>
                 <form onSubmit={handleUpload} className="flex flex-col gap-4 w-full">
                     <div 
-                        className="flex flex-col items-center justify-center border-2 border-dashed border-teal-500 rounded-lg p-6 cursor-pointer hover:bg-teal-50 transition-colors"
+                        className={`flex flex-col items-center justify-center border-2 border-dashed border-teal-500 rounded-lg p-6 cursor-pointer hover:bg-teal-50 transition-colors${dragOver ? ' dragover' : ''}`}
                         onClick={() => fileInputRef.current.click()}
-                        onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add(styles.dragover); }}
-                        onDragLeave={(e) => e.currentTarget.classList.remove(styles.dragover)}
+                        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                        onDragLeave={() => setDragOver(false)}
                         onDrop={handleDragDrop}
                     >
                         <input

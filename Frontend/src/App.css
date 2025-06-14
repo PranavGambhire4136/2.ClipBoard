@@ -40,3 +40,10 @@
 .read-the-docs {
   color: #888;
 } */
+
+.dragover {
+  background: #ccfbf1 !important;
+  border-color: #14b8a6 !important;
+  box-shadow: 0 0 0 2px #14b8a633, 0 2px 8px #14b8a644;
+  transition: background 0.2s, border-color 0.2s;
+}
