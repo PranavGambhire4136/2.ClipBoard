@@ -1,217 +1,193 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useRef } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { UploadCloud, File, Key, Download, Copy, Send, FileText } from 'react-feather';
 
 function AddFile() {
-  const [sendFile, setSendFile] = useState({});
-  const [recoveryString, setRecoveryString] = useState("");
-  const [receivedFile, setReceivedFile] = useState(false);
-  const [retrievedFileData, setRetrievedFileData] = useState({
-    location: "",
-    Type: "",
-  });
-  const [fileUploaded, setFileUploaded] = useState(false);
-  const navigate = useNavigate();
-
-  const changeHandler = (e) => {
-    const { name, value } = e.target;
-    setSendFile((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const fileChangeHandler = (e) => {
-    setSendFile((prev) => ({ ...prev, file: e.target.files[0] }));
-  };
-
-  const submitHandler = (e) => {
-    e.preventDefault();
-    const toastId = toast.loading("Uploading file...");
-    axios
-      .post("https://two-clipboard.onrender.com/api/v1/uploadFile", sendFile,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
-      )
-      .then((response) => {
-        setRecoveryString(response.data.data.recoveryString);
-        setFileUploaded(true);
-        toast.success(`File uploaded successfully! Recovery String: ${response.data.data.recoveryString}`);
-        toast.dismiss(toastId);
-      })
-      .catch((error) => {
-        // console.log(error);
-        toast.fail(error.response.data.message);
-        toast.dismiss(toastId);
-      });
-
-  };
-
-  const submitRecovery = (e) => {
-    e.preventDefault();
-
-    const toastId = toast.loading("Retrieving file...");
-
-    axios
-      .get("https://two-clipboard.onrender.com/api/v1/receiveFile", {
-        params: {
-          RecoveryString: recoveryString,
-        },
-      })
-      .then((response) => {
-        setRetrievedFileData(response.data.file);
-        setReceivedFile(true);
-        toast.dismiss(toastId);
-      })
-      .catch((error) => {
-        toast.error(error.response.data.message);
-        toast.dismiss(toastId);
-      });
+    const [file, setFile] = useState(null);
+    const [customCode, setCustomCode] = useState("");
+    const [code, setCode] = useState("");
+    const [generatedCode, setGeneratedCode] = useState("");
+    const [retrievedFileData, setRetrievedFileData] = useState(null);
+    const fileInputRef = useRef(null);
 
 
-  };
+    const handleFileSelect = (selectedFile) => {
+        if (selectedFile) {
+            setFile(selectedFile);
+        }
+    };
 
-  const handleDownload = async () => {
+    const handleDragDrop = (e) => {
+        e.preventDefault();
+        e.currentTarget.classList.remove(styles.dragover);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            handleFileSelect(e.dataTransfer.files[0]);
+        }
+    };
 
-    if (retrievedFileData && retrievedFileData.location && retrievedFileData.filename) {
-
-      if (!retrievedFileData.Type) {
-        toast.error("Error: File type is missing");
-        return;
-      }
-
-      try {
-        const response = await fetch(retrievedFileData.location);
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch the file");
+    const handleUpload = (e) => {
+        e.preventDefault();
+        if (!file) {
+            toast.error("Please select a file to upload.");
+            return;
+        }
+        const formData = new FormData();
+                formData.append('file', file);
+        if (customCode) {
+            formData.append('recoveryString', customCode);
         }
 
-        const fileData = await response.blob();
-        const fileType = retrievedFileData.Type.trim().toLowerCase();
+        const toastId = toast.loading("Uploading file...");
+        axios.post("https://two-clipboard.onrender.com/api/v1/uploadFile", formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        })
+        .then(response => {
+            setGeneratedCode(response.data.data.recoveryString);
+            toast.success("File uploaded successfully!");
+            toast.dismiss(toastId);
+        })
+        .catch(error => {
+            toast.error(error.response?.data?.message || "Failed to upload file.");
+            toast.dismiss(toastId);
+        });
+    };
 
-        let newFileName = retrievedFileData.filename;
-        if (!newFileName.toLowerCase().endsWith(`.${fileType}`)) {
-          newFileName = `${newFileName}.${fileType}`;
+    const handleRetrieve = (e) => {
+        e.preventDefault();
+        if (!code.trim()) {
+            toast.error("Please enter a recovery code.");
+            return;
         }
+        const toastId = toast.loading("Retrieving file...");
+        axios.get("https://two-clipboard.onrender.com/api/v1/receiveFile", { params: { RecoveryString: code } })
+        .then(response => {
+            setRetrievedFileData(response.data.file);
+            toast.success("File ready for download!");
+            toast.dismiss(toastId);
+        })
+        .catch(error => {
+            toast.error(error.response?.data?.message || "Failed to retrieve file.");
+            toast.dismiss(toastId);
+        });
+    };
 
-        const fileUrl = URL.createObjectURL(new Blob([fileData], { type: fileData.type }));
+    const handleDownload = async () => {
+        if (!retrievedFileData?.location || !retrievedFileData?.filename) {
+            toast.error("File data is missing.");
+            return;
+        }
+        try {
+            const response = await fetch(retrievedFileData.location);
+            if (!response.ok) throw new Error('Network response was not ok.');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = retrievedFileData.filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            toast.success("Download started!");
+        } catch (error) {
+            toast.error("Failed to download the file.");
+        }
+    };
+    
+    const copyToClipboard = (textToCopy) => {
+        navigator.clipboard.writeText(textToCopy)
+            .then(() => toast.success("Copied to clipboard!"))
+            .catch(() => toast.error("Failed to copy."));
+    };
 
-        const link = document.createElement("a");
-        link.href = fileUrl;
-        link.download = newFileName;
-        link.target = "_blank";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    return (
+        <div className="flex flex-col items-center justify-center min-h-[80vh] w-full flex-1">
+            <div className="flex justify-center w-full">
+                <div className="w-full max-w-md">
+            <header className="text-center mb-6">
+                <h1>Add a File</h1>
+                <p>Upload your file and get a 4-digit code to share.</p>
+            </header>
 
-        URL.revokeObjectURL(fileUrl);
-
-        toast.success("File downloaded successfully!");
-      } catch (error) {
-        toast.error("Error: Unable to download the file.");
-      }
-    } else {
-      toast.error("Error: File data is incomplete or missing.");
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 flex-col">
-      {!receivedFile && (
-        <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
-          <div className="text-gray-700 text-2xl font-bold mb-4">File Manager</div>
-
-          {/* File Upload Form */}
-          <form onSubmit={submitHandler} className="flex flex-col space-y-4">
-            <div className="text-gray-700 text-lg font-semibold">Upload File</div>
-            <div className="border border-gray-300 bg-amber-100 rounded-lg p-4">
-              <input
-                type="file"
-                onChange={fileChangeHandler}
-                className="w-full bg-transparent focus:outline-none"
-                placeholder="Select File"
-                required
-              />
+            <div className="bg-white rounded-xl shadow-lg p-8 mb-8 w-full max-w-md mx-auto flex flex-col items-center">
+                <h2><UploadCloud size={24} /> Upload File</h2>
+                <form onSubmit={handleUpload} className="flex flex-col gap-4 w-full">
+                    <div 
+                        className="flex flex-col items-center justify-center border-2 border-dashed border-teal-500 rounded-lg p-6 cursor-pointer hover:bg-teal-50 transition-colors"
+                        onClick={() => fileInputRef.current.click()}
+                        onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add(styles.dragover); }}
+                        onDragLeave={(e) => e.currentTarget.classList.remove(styles.dragover)}
+                        onDrop={handleDragDrop}
+                    >
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={(e) => handleFileSelect(e.target.files[0])}
+                            hidden
+                        />
+                        <File size={48} color="var(--primary-color)" />
+                        <p>Drag & drop your file here or <span style={{color: 'var(--primary-color)', fontWeight: '600'}}>browse</span></p>
+                    </div>
+                                        {file && <p className="text-sm text-gray-600 mt-2">Selected: {file.name}</p>}
+                    <input
+                        type="text"
+                        className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                        placeholder="Optional: Enter custom 4-digit code"
+                        value={customCode}
+                        onChange={(e) => setCustomCode(e.target.value)}
+                        maxLength="4"
+                    />
+                    <button type="submit" className="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-md flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled={!file}>
+                        <Send size={18} /> Generate Code
+                    </button>
+                </form>
+                {generatedCode && (
+                    <div className="bg-teal-50 rounded-lg p-4 mt-4 flex flex-col items-center w-full">
+                        <div className="flex items-center justify-between w-full mb-2">
+                            <h3 className="text-lg font-bold">Your Code:</h3>
+                            <button onClick={() => copyToClipboard(generatedCode)} className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-1 px-3 rounded-md flex items-center gap-2 transition-colors"><Copy size={16}/> Copy</button>
+                        </div>
+                        <div className="text-2xl font-mono font-bold bg-gray-100 rounded px-4 py-2 mt-2 text-center tracking-widest">{generatedCode}</div>
+                    </div>
+                )}
             </div>
-            <div className="text-gray-700 text-lg font-semibold">Set Recovery Password (Optional)</div>
-            <input
-              type="text"
-              placeholder="Enter Custom Recovery Password"
-              name="recoveryString"
-              value={sendFile.recoveryString}
-              onChange={changeHandler}
-              className="w-full border border-gray-300 rounded-lg p-2 focus:ring focus:ring-amber-300 focus:outline-none"
-            />
-            {fileUploaded && (
-              <div className="text-gray-700 text-lg font-semibold">
-                Recovery String: <span className="text-orange-500">{recoveryString}</span>
-              </div>)}
-            <button
-              type="submit"
-              className="bg-amber-500 text-white py-2 rounded-lg hover:bg-amber-600 transition"
-            >
-              Upload File to Online Clipboard
-            </button>
-          </form>
 
-          {/* Divider */}
-          <div className="my-6 border-t border-gray-300 text-center relative">
-            <span className="bg-white px-2 text-gray-500 text-sm absolute -top-2.5 left-1/2 transform -translate-x-1/2">
-              OR
-            </span>
-          </div>
+            <div className="bg-white rounded-lg shadow-lg p-8 mb-8 w-full max-w-md mx-auto flex flex-col items-center">
+                <h2 className="text-2xl font-bold mb-4"><Key size={24} /> Retrieve File</h2>
+                <form onSubmit={handleRetrieve} className="flex flex-col gap-4 w-full">
+                    <input
+                        type="text"
+                        className="border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-teal-400"
+                        placeholder="Enter 4-digit code"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        maxLength="4"
+                        required
+                    />
+                    <button type="submit" className="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-md flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                        <Download size={18} /> Retrieve
+                    </button>
+                </form>
+                {retrievedFileData && (
+                    <div className="bg-teal-50 rounded-lg p-4 mt-4 flex flex-col items-center w-full">
+                        <div className="flex flex-col items-center gap-2">
+                            <FileText size={40} />
+                            <p className="text-lg font-bold">{retrievedFileData.filename}</p>
+                            <button onClick={handleDownload} className="bg-teal-500 hover:bg-teal-600 text-white font-semibold py-2 px-4 rounded-md flex items-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <Download size={18} /> Download File
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
 
-          {/* Retrieve File Form */}
-          <form onSubmit={submitRecovery} className="flex flex-col space-y-4">
-            <div className="text-gray-700 text-lg font-semibold">Retrieve File</div>
-            <input
-              type="text"
-              placeholder="Enter Recovery String"
-              value={recoveryString}
-              onChange={(e) => setRecoveryString(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-2 focus:ring focus:ring-amber-300 focus:outline-none"
-              required
-            />
-            <button
-              type="submit"
-              className="bg-gray-800 text-white py-2 rounded-lg hover:bg-gray-900 transition">
-              Retrieve File from Online Clipboard
-            </button>
-          </form>
+
+                </div>
+            </div>
         </div>
-      )}
-
-      {receivedFile && (
-        <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <div className="text-gray-700 text-xl font-bold">Retrieved File</div>
-            <button
-              onClick={handleDownload}
-              className="bg-amber-500 text-white px-3 py-1 rounded-lg text-sm font-medium hover:bg-amber-600 transition"
-            >
-              Download
-            </button>
-          </div>
-          <div
-            className="border border-gray-300 rounded-lg p-4 text-gray-800 text-base font-medium bg-amber-100"
-            style={{ whiteSpace: "pre-wrap" }}
-          >
-            Please Download Your File
-          </div>
-        </div>
-      )}
-
-      <br />
-      <button
-        onClick={() => navigate("/")}
-        className="bg-gray-800 text-white p-2 rounded-lg hover:bg-gray-900 transition"
-      >
-        Send Text
-      </button>
-    </div>
-  );
+    );
 }
 
 export default AddFile;
