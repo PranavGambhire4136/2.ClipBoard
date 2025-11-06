@@ -32,5 +32,6 @@ exports.receiveString = async (req, res) => {
             success: false,
             message: "Something went wrong",
         })
+        console.log(error);
     }
 }
