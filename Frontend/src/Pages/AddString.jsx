@@ -49,6 +49,7 @@ function AddString() {
             })
             .catch(error => {
                 toast.error(error.response?.data?.message || "Failed to retrieve text.");
+                console.log(error);
                 toast.dismiss(toastId);
             });
     };
