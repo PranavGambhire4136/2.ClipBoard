@@ -16,6 +16,7 @@ function AddString() {
 
     const handleSend = (e) => {
         e.preventDefault();
+        console.log("checking handle send");
         if (!text.trim()) {
             toast.error("Please enter some text.");
             return;
