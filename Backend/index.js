@@ -11,7 +11,7 @@ Cloudinary.cloudinaryConnect();
 DBConnect.connectDB();
 
 app.use(cors({
-    origin: 'https://onlineclipboardpranav.vercel.app',
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
