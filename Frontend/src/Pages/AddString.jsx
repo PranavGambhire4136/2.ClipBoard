@@ -31,6 +31,7 @@ function AddString() {
             .catch(error => {
                 toast.error(error.response?.data?.message || "Failed to generate code.");
                 toast.dismiss(toastId);
+                console.log(error);
             });
     };
 
