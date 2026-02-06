@@ -28,10 +28,10 @@ exports.receiveString = async (req, res) => {
             string: string.string
         })
     } catch (error) {
+        console.log(error);
         return res.status(500).json({ 
             success: false,
             message: error,
         })
-        console.log(error);
     }
 }
