@@ -67,7 +67,7 @@ exports.sendFile = async (req, res) => {
     } catch (error) {
         return res.status(500).json({
             success: false,
-            message: "Something went wrong while sending file",
+            message: error,
         })
     }
 }
